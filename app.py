@@ -45,7 +45,7 @@ def evaluate(gold_df, eval_df):
         if not gold_row.empty and not eval_row.empty:
             eval_row = eval_row.iloc[0]
             gold_row = gold_row.iloc[0]
-            assignee = eval_row['Assignee']
+            assignee = gold_row['Assignee']
             
             total_counts[assignee] += 1
             
