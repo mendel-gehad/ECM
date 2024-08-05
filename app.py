@@ -1,4 +1,4 @@
-limport streamlit as st
+import streamlit as st
 import pandas as pd
 
 def load_data(uploaded_file):
