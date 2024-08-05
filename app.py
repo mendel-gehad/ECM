@@ -189,5 +189,4 @@ def main():
                     if evaluation_type == "General Comparison":
                         results_df, disagreements_df = evaluate(gold_df, eval_df)
                         if not results_df.empty:
-                            st.write("Evaluation Results")
-                           
+                            st.write
