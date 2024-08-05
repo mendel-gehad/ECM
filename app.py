@@ -3,6 +3,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 
+# Ensure matplotlib is used by pandas
+pd.options.plotting.backend = "matplotlib"
+
 def load_data(uploaded_file):
     if uploaded_file is not None:
         return pd.ExcelFile(uploaded_file)
@@ -124,7 +127,8 @@ def main():
                     results_df, disagreement_dfs = evaluate(gold_df, eval_df)
                     if not results_df.empty:
                         st.write("Evaluation Results")
-                        st.dataframe(apply_conditional_formatting(results_df))
+                        styled_df = apply_conditional_formatting(results_df)
+                        st.dataframe(styled_df)
                         
                         csv = results_df.to_csv(index=False)
                         st.download_button("Download CSV", csv, "evaluation_results.csv", "text/csv")
