@@ -41,6 +41,14 @@ def evaluate(gold_df, eval_df):
     parent_mendel_id_total = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     disagreements = []
 
+    # Function to compare values, considering empty cells as matches
+    def compare_values(gold_value, eval_value):
+        if pd.isna(gold_value) and pd.isna(eval_value):
+            return True
+        if gold_value == "" and eval_value == "":
+            return True
+        return gold_value == eval_value
+
     # Align rows based on 'Code'
     for code in gold_df['Code'].unique():
         gold_row = gold_df[gold_df['Code'] == code]
@@ -69,13 +77,13 @@ def evaluate(gold_df, eval_df):
                 'Evaluated Parent Mendel ID If Missing Concept': eval_row['Parent Mendel ID If Missing Concept']
             }
             
-            if gold_row['Decision'] == eval_row['Decision']:
+            if compare_values(gold_row['Decision'], eval_row['Decision']):
                 decision_correct[assignee] += 1
-            if gold_row['Mendel ID'] == eval_row['Mendel ID']:
+            if compare_values(gold_row['Mendel ID'], eval_row['Mendel ID']):
                 mendel_id_correct[assignee] += 1
-            if gold_row['Missing Concept'] == eval_row['Missing Concept']:
+            if compare_values(gold_row['Missing Concept'], eval_row['Missing Concept']):
                 missing_concept_correct[assignee] += 1
-            if gold_row['Parent Mendel ID If Missing Concept'] == eval_row['Parent Mendel ID If Missing Concept']:
+            if compare_values(gold_row['Parent Mendel ID If Missing Concept'], eval_row['Parent Mendel ID If Missing Concept']):
                 parent_mendel_id_correct[assignee] += 1
                 
             disagreements.append(disagreement_entry)
