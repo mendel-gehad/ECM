@@ -21,23 +21,22 @@ def evaluate(gold_df, eval_df):
     for col in required_columns:
         if col not in gold_df.columns:
             st.error(f"Missing column in gold standard sheet: {col}")
-            return pd.DataFrame(), pd.DataFrame()
+            return pd.DataFrame()
         if col not in eval_df.columns:
             st.error(f"Missing column in evaluation sheet: {col}")
-            return pd.DataFrame(), pd.DataFrame()
+            return pd.DataFrame()
 
     # Filter rows where status is 'Done'
     gold_df = gold_df[gold_df['Status'] == 'Done']
     eval_df = eval_df[eval_df['Status'] == 'Done']
     
-    # Initialize counters and disagreement data
+    # Initialize counters
     decision_correct = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     mendel_id_correct = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     missing_concept_correct = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     parent_mendel_id_correct = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     total_counts = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
-    disagreements = []
-
+    
     # Align rows based on 'Code'
     for code in gold_df['Code']:
         gold_row = gold_df[gold_df['Code'] == code]
@@ -50,14 +49,31 @@ def evaluate(gold_df, eval_df):
             
             total_counts[assignee] += 1
             
-            if gold_row['Decision'] != eval_row['Decision']:
-                disagreements.append({
-                    'Code': code,
-                    'Assignee': assignee,
-                    'Field': 'Decision',
-                    'Gold': gold_row['Decision'],
-                    'Evaluated': eval_row['Decision']
-                })
+            if gold_row['Decision'] == eval_row['Decision']:
+                decision_correct[assignee] += 1
+                if gold_row['Mendel ID'] == eval_row['Mendel ID']:
+                    mendel_id_correct[assignee] += 1
+                    if gold_row['Missing Concept'] == eval_row['Missing Concept']:
+                        missing_concept_correct[assignee] += 1
+                        if gold_row['Parent Mendel ID If Missing Concept'] == eval_row['Parent Mendel ID If Missing Concept']:
+                            parent_mendel_id_correct[assignee] += 1
+    
+    # Calculate percentages
+    results = []
+    for assignee in eval_df['Assignee'].unique():
+        total = total_counts[assignee]
+        if total > 0:
+            results.append({
+                'Assignee': assignee,
+                'Evaluated Rows': total,
+                'Decision': f"{(decision_correct[assignee] / total) * 100:.2f}%",
+                'Mendel ID': f"{(mendel_id_correct[assignee] / total) * 100:.2f}%",
+                'Missing Concept': f"{(missing_concept_correct[assignee] / total) * 100:.2f}%",
+                'Parent Mendel ID If Missing Concept': f"{(parent_mendel_id_correct[assignee] / total) * 100:.2f}%"
+            })
+    
+    results_df = pd.DataFrame(results)
+    return results_df
                 
             if gold_row['Mendel ID'] != eval_row['Mendel ID']:
                 disagreements.append({
@@ -86,23 +102,9 @@ def evaluate(gold_df, eval_df):
                     'Evaluated': eval_row['Parent Mendel ID If Missing Concept']
                 })
     
-    # Calculate percentages
-    results = []
-    for assignee in eval_df['Assignee'].unique():
-        total = total_counts[assignee]
-        if total > 0:
-            results.append({
-                'Assignee': assignee,
-                'Evaluated Rows': total,
-                'Decision': (decision_correct[assignee] / total) * 100,
-                'Mendel ID': (mendel_id_correct[assignee] / total) * 100,
-                'Missing Concept': (missing_concept_correct[assignee] / total) * 100,
-                'Parent Mendel ID If Missing Concept': (parent_mendel_id_correct[assignee] / total) * 100
-            })
-    
-    results_df = pd.DataFrame(results)
+
     disagreements_df = pd.DataFrame(disagreements)
-    return results_df, disagreements_df
+    return disagreements_df
 
 def main():
     st.title("ECM Comparison")
