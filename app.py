@@ -30,19 +30,14 @@ def evaluate(gold_df, eval_df):
     gold_df = gold_df[gold_df['Status'] == 'Done']
     eval_df = eval_df[eval_df['Status'] == 'Done']
     
-    # Initialize counters and disagreement sheets
+    # Initialize counters and disagreement data
     decision_correct = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     mendel_id_correct = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     missing_concept_correct = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     parent_mendel_id_correct = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     total_counts = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
-    disagreement_sheets = {
-        'Decision': [],
-        'Mendel ID': [],
-        'Missing Concept': [],
-        'Parent Mendel ID If Missing Concept': []
-    }
-    
+    disagreements = []
+
     # Align rows based on 'Code'
     for code in gold_df['Code']:
         gold_row = gold_df[gold_df['Code'] == code]
@@ -55,25 +50,37 @@ def evaluate(gold_df, eval_df):
             
             total_counts[assignee] += 1
             
-            if gold_row['Decision'] == eval_row['Decision']:
-                decision_correct[assignee] += 1
-            else:
-                disagreement_sheets['Decision'].append(eval_row.to_dict())
+            if gold_row['Decision'] != eval_row['Decision']:
+                disagreements.append({
+                    'Code': code,
+                    'Field': 'Decision',
+                    'Gold': gold_row['Decision'],
+                    'Evaluated': eval_row['Decision']
+                })
                 
-            if gold_row['Mendel ID'] == eval_row['Mendel ID']:
-                mendel_id_correct[assignee] += 1
-            else:
-                disagreement_sheets['Mendel ID'].append(eval_row.to_dict())
+            if gold_row['Mendel ID'] != eval_row['Mendel ID']:
+                disagreements.append({
+                    'Code': code,
+                    'Field': 'Mendel ID',
+                    'Gold': gold_row['Mendel ID'],
+                    'Evaluated': eval_row['Mendel ID']
+                })
                 
-            if gold_row['Missing Concept'] == eval_row['Missing Concept']:
-                missing_concept_correct[assignee] += 1
-            else:
-                disagreement_sheets['Missing Concept'].append(eval_row.to_dict())
+            if gold_row['Missing Concept'] != eval_row['Missing Concept']:
+                disagreements.append({
+                    'Code': code,
+                    'Field': 'Missing Concept',
+                    'Gold': gold_row['Missing Concept'],
+                    'Evaluated': eval_row['Missing Concept']
+                })
                 
-            if gold_row['Parent Mendel ID If Missing Concept'] == eval_row['Parent Mendel ID If Missing Concept']:
-                parent_mendel_id_correct[assignee] += 1
-            else:
-                disagreement_sheets['Parent Mendel ID If Missing Concept'].append(eval_row.to_dict())
+            if gold_row['Parent Mendel ID If Missing Concept'] != eval_row['Parent Mendel ID If Missing Concept']:
+                disagreements.append({
+                    'Code': code,
+                    'Field': 'Parent Mendel ID If Missing Concept',
+                    'Gold': gold_row['Parent Mendel ID If Missing Concept'],
+                    'Evaluated': eval_row['Parent Mendel ID If Missing Concept']
+                })
     
     # Calculate percentages
     results = []
@@ -90,8 +97,8 @@ def evaluate(gold_df, eval_df):
             })
     
     results_df = pd.DataFrame(results)
-    disagreement_dfs = {key: pd.DataFrame(value) for key, value in disagreement_sheets.items()}
-    return results_df, disagreement_dfs
+    disagreements_df = pd.DataFrame(disagreements)
+    return results_df, disagreements_df
 
 def main():
     st.title("ECM Comparison")
@@ -116,7 +123,7 @@ def main():
                 eval_df = eval_xls.parse(tab_selection)
                 
                 if st.button("Start Evaluation"):
-                    results_df, disagreement_dfs = evaluate(gold_df, eval_df)
+                    results_df, disagreements_df = evaluate(gold_df, eval_df)
                     if not results_df.empty:
                         st.write("Evaluation Results")
                         st.dataframe(results_df)
@@ -124,11 +131,12 @@ def main():
                         csv = results_df.to_csv(index=False)
                         st.download_button("Download CSV", csv, "evaluation_results.csv", "text/csv")
                         
-                        # Download disagreement sheets
-                        for key, df in disagreement_dfs.items():
-                            if not df.empty:
-                                csv = df.to_csv(index=False)
-                                st.download_button(f"Download Disagreement CSV for {key}", csv, f"disagreement_{key.lower()}.csv", "text/csv")
+                        if not disagreements_df.empty:
+                            st.write("Disagreements")
+                            st.dataframe(disagreements_df)
+                            
+                            csv_disagreements = disagreements_df.to_csv(index=False)
+                            st.download_button("Download Disagreements CSV", csv_disagreements, "disagreements.csv", "text/csv")
     
 if __name__ == "__main__":
     main()
