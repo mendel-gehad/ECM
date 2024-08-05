@@ -55,50 +55,30 @@ def evaluate(gold_df, eval_df):
             mendel_id_total[assignee] += 1
             missing_concept_total[assignee] += 1
             parent_mendel_id_total[assignee] += 1
+
+            disagreement_entry = {
+                'Code': code,
+                'Assignee': assignee,
+                'Gold Decision': gold_row['Decision'],
+                'Evaluated Decision': eval_row['Decision'],
+                'Gold Mendel ID': gold_row['Mendel ID'],
+                'Evaluated Mendel ID': eval_row['Mendel ID'],
+                'Gold Missing Concept': gold_row['Missing Concept'],
+                'Evaluated Missing Concept': eval_row['Missing Concept'],
+                'Gold Parent Mendel ID If Missing Concept': gold_row['Parent Mendel ID If Missing Concept'],
+                'Evaluated Parent Mendel ID If Missing Concept': eval_row['Parent Mendel ID If Missing Concept']
+            }
             
             if gold_row['Decision'] == eval_row['Decision']:
                 decision_correct[assignee] += 1
-            else:
-                disagreements.append({
-                    'Code': code,
-                    'Assignee': assignee,
-                    'Field': 'Decision',
-                    'Gold': gold_row['Decision'],
-                    'Evaluated': eval_row['Decision']
-                })
-                
             if gold_row['Mendel ID'] == eval_row['Mendel ID']:
                 mendel_id_correct[assignee] += 1
-            else:
-                disagreements.append({
-                    'Code': code,
-                    'Assignee': assignee,
-                    'Field': 'Mendel ID',
-                    'Gold': gold_row['Mendel ID'],
-                    'Evaluated': eval_row['Mendel ID']
-                })
-                
             if gold_row['Missing Concept'] == eval_row['Missing Concept']:
                 missing_concept_correct[assignee] += 1
-            else:
-                disagreements.append({
-                    'Code': code,
-                    'Assignee': assignee,
-                    'Field': 'Missing Concept',
-                    'Gold': gold_row['Missing Concept'],
-                    'Evaluated': eval_row['Missing Concept']
-                })
-                
             if gold_row['Parent Mendel ID If Missing Concept'] == eval_row['Parent Mendel ID If Missing Concept']:
                 parent_mendel_id_correct[assignee] += 1
-            else:
-                disagreements.append({
-                    'Code': code,
-                    'Assignee': assignee,
-                    'Field': 'Parent Mendel ID If Missing Concept',
-                    'Gold': gold_row['Parent Mendel ID If Missing Concept'],
-                    'Evaluated': eval_row['Parent Mendel ID If Missing Concept']
-                })
+                
+            disagreements.append(disagreement_entry)
 
     # Calculate percentages
     results = []
