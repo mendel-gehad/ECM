@@ -11,6 +11,11 @@ def evaluate(gold_df, eval_df):
     gold_df = gold_df[gold_df['Status'] == 'Done']
     eval_df = eval_df[eval_df['Status'] == 'Done']
     
+    # Align rows based on 'Code'
+    results = []
+    for assignee in gold_df['Assignee'].unique():
+        gold_rows = gold_df[gold_df['Assignee'] == assignee]
+        eval_rows = eval_df[eval_df['Assignee'] == assignee]
         
         decision_correct = 0
         mendel_id_correct = 0
