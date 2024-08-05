@@ -1,10 +1,5 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib
-
-# Ensure matplotlib is used by pandas
-pd.options.plotting.backend = "matplotlib"
 
 def load_data(uploaded_file):
     if uploaded_file is not None:
@@ -98,9 +93,6 @@ def evaluate(gold_df, eval_df):
     disagreement_dfs = {key: pd.DataFrame(value) for key, value in disagreement_sheets.items()}
     return results_df, disagreement_dfs
 
-def apply_conditional_formatting(df):
-    return df.style.background_gradient(cmap='coolwarm', subset=['Decision', 'Mendel ID', 'Missing Concept', 'Parent Mendel ID If Missing Concept'])
-
 def main():
     st.title("ECM Comparison")
     
@@ -127,8 +119,7 @@ def main():
                     results_df, disagreement_dfs = evaluate(gold_df, eval_df)
                     if not results_df.empty:
                         st.write("Evaluation Results")
-                        styled_df = apply_conditional_formatting(results_df)
-                        st.dataframe(styled_df)
+                        st.dataframe(results_df)
                         
                         csv = results_df.to_csv(index=False)
                         st.download_button("Download CSV", csv, "evaluation_results.csv", "text/csv")
