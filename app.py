@@ -60,7 +60,7 @@ def evaluate(gold_df, eval_df):
     
     # Calculate percentages
     results = []
-    for assignee in gold_df['Assignee'].unique():
+    for assignee in eval_df['Assignee'].unique():
         total = total_counts[assignee]
         if total > 0:
             results.append({
