@@ -53,6 +53,7 @@ def evaluate(gold_df, eval_df):
             if gold_row['Decision'] != eval_row['Decision']:
                 disagreements.append({
                     'Code': code,
+                    'Assignee': assignee,
                     'Field': 'Decision',
                     'Gold': gold_row['Decision'],
                     'Evaluated': eval_row['Decision']
@@ -61,6 +62,7 @@ def evaluate(gold_df, eval_df):
             if gold_row['Mendel ID'] != eval_row['Mendel ID']:
                 disagreements.append({
                     'Code': code,
+                    'Assignee': assignee,
                     'Field': 'Mendel ID',
                     'Gold': gold_row['Mendel ID'],
                     'Evaluated': eval_row['Mendel ID']
@@ -69,6 +71,7 @@ def evaluate(gold_df, eval_df):
             if gold_row['Missing Concept'] != eval_row['Missing Concept']:
                 disagreements.append({
                     'Code': code,
+                    'Assignee': assignee,
                     'Field': 'Missing Concept',
                     'Gold': gold_row['Missing Concept'],
                     'Evaluated': eval_row['Missing Concept']
@@ -77,6 +80,7 @@ def evaluate(gold_df, eval_df):
             if gold_row['Parent Mendel ID If Missing Concept'] != eval_row['Parent Mendel ID If Missing Concept']:
                 disagreements.append({
                     'Code': code,
+                    'Assignee': assignee,
                     'Field': 'Parent Mendel ID If Missing Concept',
                     'Gold': gold_row['Parent Mendel ID If Missing Concept'],
                     'Evaluated': eval_row['Parent Mendel ID If Missing Concept']
