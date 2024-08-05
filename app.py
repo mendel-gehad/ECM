@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib
 
 def load_data(uploaded_file):
     if uploaded_file is not None:
