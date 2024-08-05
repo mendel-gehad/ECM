@@ -110,6 +110,14 @@ def evaluate(gold_df, eval_df):
     
     results_df = pd.DataFrame(results)
     disagreements_df = pd.DataFrame(disagreements)
+
+    # Log details for debugging
+    st.write("Total counts per assignee:", total_counts)
+    st.write("Decision correct counts per assignee:", decision_correct)
+    st.write("Mendel ID correct counts per assignee:", mendel_id_correct)
+    st.write("Missing Concept correct counts per assignee:", missing_concept_correct)
+    st.write("Parent Mendel ID If Missing Concept correct counts per assignee:", parent_mendel_id_correct)
+    
     return results_df, disagreements_df
 
 def main():
