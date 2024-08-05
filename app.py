@@ -97,13 +97,14 @@ def main():
                 gold_df = gold_xls.parse(tab_selection)
                 eval_df = eval_xls.parse(tab_selection)
                 
-                results_df = evaluate(gold_df, eval_df)
-                if not results_df.empty:
-                    st.write("Evaluation Results")
-                    st.dataframe(results_df)
-                    
-                    csv = results_df.to_csv(index=False)
-                    st.download_button("Download CSV", csv, "evaluation_results.csv", "text/csv")
+                if st.button("Start Evaluation"):
+                    results_df = evaluate(gold_df, eval_df)
+                    if not results_df.empty:
+                        st.write("Evaluation Results")
+                        st.dataframe(results_df)
+                        
+                        csv = results_df.to_csv(index=False)
+                        st.download_button("Download CSV", csv, "evaluation_results.csv", "text/csv")
     
 if __name__ == "__main__":
     main()
