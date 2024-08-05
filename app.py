@@ -1,4 +1,4 @@
-import streamlit as st
+limport streamlit as st
 import pandas as pd
 
 def load_data(uploaded_file):
@@ -31,11 +31,11 @@ def evaluate(gold_df, eval_df):
     eval_df = eval_df[eval_df['Status'] == 'Done']
     
     # Initialize counters
-    decision_correct = {assignee: 0 for assignee in gold_df['Assignee'].unique()}
-    mendel_id_correct = {assignee: 0 for assignee in gold_df['Assignee'].unique()}
-    missing_concept_correct = {assignee: 0 for assignee in gold_df['Assignee'].unique()}
-    parent_mendel_id_correct = {assignee: 0 for assignee in gold_df['Assignee'].unique()}
-    total_counts = {assignee: 0 for assignee in gold_df['Assignee'].unique()}
+    decision_correct = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
+    mendel_id_correct = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
+    missing_concept_correct = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
+    parent_mendel_id_correct = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
+    total_counts = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     
     # Align rows based on 'Code'
     for code in gold_df['Code']:
@@ -45,7 +45,7 @@ def evaluate(gold_df, eval_df):
         if not gold_row.empty and not eval_row.empty:
             eval_row = eval_row.iloc[0]
             gold_row = gold_row.iloc[0]
-            assignee = gold_row['Assignee']
+            assignee = eval_row['Assignee']
             
             total_counts[assignee] += 1
             
