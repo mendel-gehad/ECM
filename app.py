@@ -12,7 +12,6 @@ def compare_values(gold_value, eval_value):
     if gold_value == "" and eval_value == "":
         return True
     return gold_value == eval_value
-
 def evaluate(gold_df, eval_df):
     # Ensure consistent column names
     gold_df.columns = gold_df.columns.str.strip()
@@ -47,7 +46,6 @@ def evaluate(gold_df, eval_df):
     missing_concept_total = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     parent_mendel_id_total = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     disagreements = []
-
     # Align rows based on 'Code'
     for code in gold_df['Code'].unique():
         gold_row = gold_df[gold_df['Code'] == code]
@@ -86,7 +84,6 @@ def evaluate(gold_df, eval_df):
                 parent_mendel_id_correct[assignee] += 1
                 
             disagreements.append(disagreement_entry)
-
     # Calculate percentages
     results = []
     for assignee in eval_df['Assignee'].unique():
@@ -106,7 +103,6 @@ def evaluate(gold_df, eval_df):
     results_df = pd.DataFrame(results)
     disagreements_df = pd.DataFrame(disagreements)
     return results_df, disagreements_df
-
 def compare_objects_dynamic(df1, df2):
     # Identify all properties in the Updated and Created Object columns
     updated_properties = [col for col in df1.columns if col.startswith('Updated Object')]
@@ -160,7 +156,6 @@ def compare_objects_dynamic(df1, df2):
         })
     
     return pd.DataFrame(metrics)
-
 def main():
     st.title("ECM Comparison")
     
@@ -183,10 +178,4 @@ def main():
             if tab_selection:
                 st.write(f"Evaluating Tab: {tab_selection}")
                 gold_df = gold_xls.parse(tab_selection, skiprows=1 if evaluation_type == "ECEq Sheets" else 0)
-                eval_df = eval_xls.parse(tab_selection, skiprows=1 if evaluation_type == "ECEq Sheets" else 0)
-                
-                if st.button("Start Evaluation"):
-                    if evaluation_type == "General Comparison":
-                        results_df, disagreements_df = evaluate(gold_df, eval_df)
-                        if not results_df.empty:
-                            st.write
+                eval_df = eval_xls.parse(tab_selection, skiprows=1 if evaluation_type == "ECE
