@@ -7,6 +7,25 @@ def load_data(uploaded_file):
     return None
 
 def evaluate(gold_df, eval_df):
+    # Ensure consistent column names
+    gold_df.columns = gold_df.columns.str.strip()
+    eval_df.columns = eval_df.columns.str.strip()
+
+    # Define the required columns
+    required_columns = [
+        'Code', 'Decision', 'Mendel ID', 'Missing Concept', 
+        'Parent Mendel ID If Missing Concept', 'Assignee', 'Status'
+    ]
+
+    # Check for missing columns
+    for col in required_columns:
+        if col not in gold_df.columns:
+            st.error(f"Missing column in gold standard sheet: {col}")
+            return pd.DataFrame()
+        if col not in eval_df.columns:
+            st.error(f"Missing column in evaluation sheet: {col}")
+            return pd.DataFrame()
+
     # Filter rows where status is 'Done'
     gold_df = gold_df[gold_df['Status'] == 'Done']
     eval_df = eval_df[eval_df['Status'] == 'Done']
@@ -79,11 +98,12 @@ def main():
                 eval_df = eval_xls.parse(tab_selection)
                 
                 results_df = evaluate(gold_df, eval_df)
-                st.write("Evaluation Results")
-                st.dataframe(results_df)
-                
-                csv = results_df.to_csv(index=False)
-                st.download_button("Download CSV", csv, "evaluation_results.csv", "text/csv")
+                if not results_df.empty:
+                    st.write("Evaluation Results")
+                    st.dataframe(results_df)
+                    
+                    csv = results_df.to_csv(index=False)
+                    st.download_button("Download CSV", csv, "evaluation_results.csv", "text/csv")
     
 if __name__ == "__main__":
     main()
