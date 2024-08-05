@@ -45,7 +45,7 @@ def evaluate(gold_df, eval_df):
         if not gold_row.empty and not eval_row.empty:
             eval_row = eval_row.iloc[0]
             gold_row = gold_row.iloc[0]
-            assignee = gold_row['Assignee']
+            assignee = eval_row['Assignee']
             
             total_counts[assignee] += 1
             
@@ -76,11 +76,11 @@ def evaluate(gold_df, eval_df):
     return results_df
 
 def main():
-    st.title("Sheet Comparison App")
+    st.title("ECM Comparison")
     
     st.sidebar.header("Upload Sheets")
-    gold_file = st.sidebar.file_uploader("Upload Gold Sheet (H2)", type=["xlsx"])
-    eval_file = st.sidebar.file_uploader("Upload Evaluation Sheet (H1)", type=["xlsx"])
+    gold_file = st.sidebar.file_uploader("Upload Gold Sheet", type=["xlsx"])
+    eval_file = st.sidebar.file_uploader("Upload Evaluated Sheet", type=["xlsx"])
     
     if gold_file and eval_file:
         gold_xls = load_data(gold_file)
