@@ -6,6 +6,13 @@ def load_data(uploaded_file):
         return pd.ExcelFile(uploaded_file)
     return None
 
+def compare_values(gold_value, eval_value):
+    if pd.isna(gold_value) and pd.isna(eval_value):
+        return True
+    if gold_value == "" and eval_value == "":
+        return True
+    return gold_value == eval_value
+
 def evaluate(gold_df, eval_df):
     # Ensure consistent column names
     gold_df.columns = gold_df.columns.str.strip()
@@ -40,14 +47,6 @@ def evaluate(gold_df, eval_df):
     missing_concept_total = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     parent_mendel_id_total = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     disagreements = []
-
-    # Function to compare values, considering empty cells as matches
-    def compare_values(gold_value, eval_value):
-        if pd.isna(gold_value) and pd.isna(eval_value):
-            return True
-        if gold_value == "" and eval_value == "":
-            return True
-        return gold_value == eval_value
 
     # Align rows based on 'Code'
     for code in gold_df['Code'].unique():
@@ -108,10 +107,66 @@ def evaluate(gold_df, eval_df):
     disagreements_df = pd.DataFrame(disagreements)
     return results_df, disagreements_df
 
+def compare_objects_dynamic(df1, df2):
+    # Identify all properties in the Updated and Created Object columns
+    updated_properties = [col for col in df1.columns if col.startswith('Updated Object')]
+    created_properties = [col for col in df1.columns if col.startswith('Created Object')]
+    all_properties = updated_properties + created_properties
+    
+    # Initialize metrics
+    metrics = []
+    
+    # Iterate through each property
+    for entity in all_properties:
+        TP = TN = FP = FN = 0
+        gold_support = df1[entity].notna().sum() if entity in df1.columns else 0
+        pred_support = df2[entity].notna().sum() if entity in df2.columns else 0
+        
+        # Align based on 'Source Code: Value'
+        for value in df1['Source Code: Value']:
+            row1 = df1[df1['Source Code: Value'] == value]
+            row2 = df2[df2['Source Code: Value'] == value]
+            
+            if not row1.empty and not row2.empty:
+                # Compare properties
+                if all(row1[entity].values == row2[entity].values):
+                    TP += 1
+                else:
+                    FN += 1
+            elif not row1.empty:
+                FN += 1
+            elif not row2.empty:
+                FP += 1
+            else:
+                TN += 1
+
+        # Calculate metrics
+        precision = TP / (TP + FP) if (TP + FP) > 0 else 0
+        recall = TP / (TP + FN) if (TP + FN) > 0 else 0
+        f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+
+        # Store metrics
+        metrics.append({
+            'Name': entity,
+            'TP': TP,
+            'TN': TN,
+            'FP': FP,
+            'FN': FN,
+            'Precision': precision,
+            'Recall': recall,
+            'F1': f1_score,
+            'Gold Support': gold_support,
+            'Pred Support': pred_support
+        })
+    
+    return pd.DataFrame(metrics)
+
 def main():
     st.title("ECM Comparison")
     
     st.sidebar.header("Upload Sheets")
+    evaluation_type = st.sidebar.selectbox("Select Evaluation Type", ["General Comparison", "ECEq Sheets"])
+    
     gold_file = st.sidebar.file_uploader("Upload Gold Sheet", type=["xlsx"])
     eval_file = st.sidebar.file_uploader("Upload Evaluated Sheet", type=["xlsx"])
     
@@ -127,24 +182,12 @@ def main():
             
             if tab_selection:
                 st.write(f"Evaluating Tab: {tab_selection}")
-                gold_df = gold_xls.parse(tab_selection)
-                eval_df = eval_xls.parse(tab_selection)
+                gold_df = gold_xls.parse(tab_selection, skiprows=1 if evaluation_type == "ECEq Sheets" else 0)
+                eval_df = eval_xls.parse(tab_selection, skiprows=1 if evaluation_type == "ECEq Sheets" else 0)
                 
                 if st.button("Start Evaluation"):
-                    results_df, disagreements_df = evaluate(gold_df, eval_df)
-                    if not results_df.empty:
-                        st.write("Evaluation Results")
-                        st.dataframe(results_df)
-                        
-                        csv = results_df.to_csv(index=False)
-                        st.download_button("Download CSV", csv, "evaluation_results.csv", "text/csv")
-                        
-                        if not disagreements_df.empty:
-                            st.write("Disagreements")
-                            st.dataframe(disagreements_df)
-                            
-                            csv_disagreements = disagreements_df.to_csv(index=False)
-                            st.download_button("Download Disagreements CSV", csv_disagreements, "disagreements.csv", "text/csv")
-    
-if __name__ == "__main__":
-    main()
+                    if evaluation_type == "General Comparison":
+                        results_df, disagreements_df = evaluate(gold_df, eval_df)
+                        if not results_df.empty:
+                            st.write("Evaluation Results")
+                           
