@@ -3,7 +3,7 @@ import pandas as pd
 
 def load_data(uploaded_file):
     if uploaded_file is not None:
-        return pd.read_excel(uploaded_file)
+        return pd.ExcelFile(uploaded_file)
     return None
 
 def evaluate(gold_df, eval_df):
@@ -44,21 +44,27 @@ def evaluate(gold_df, eval_df):
     return results_df
 
 def main():
-    st.title("ECM Evaluation")
+    st.title("Sheet Comparison App")
     
     st.sidebar.header("Upload Sheets")
     gold_file = st.sidebar.file_uploader("Upload Gold Sheet", type=["xlsx"])
     eval_file = st.sidebar.file_uploader("Upload Evaluation Sheet", type=["xlsx"])
     
     if gold_file and eval_file:
-        gold_df = load_data(gold_file)
-        eval_df = load_data(eval_file)
+        gold_xls = load_data(gold_file)
+        eval_xls = load_data(eval_file)
         
-        if gold_df is not None and eval_df is not None:
-            tab_selection = st.selectbox("Select Tab to Evaluate", gold_df.columns)
+        if gold_xls is not None and eval_xls is not None:
+            gold_sheets = gold_xls.sheet_names
+            eval_sheets = eval_xls.sheet_names
+            
+            tab_selection = st.selectbox("Select Tab to Evaluate", gold_sheets)
             
             if tab_selection:
                 st.write(f"Evaluating Tab: {tab_selection}")
+                gold_df = gold_xls.parse(tab_selection)
+                eval_df = eval_xls.parse(tab_selection)
+                
                 results_df = evaluate(gold_df, eval_df)
                 st.write("Evaluation Results")
                 st.dataframe(results_df)
