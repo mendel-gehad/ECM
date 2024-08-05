@@ -11,42 +11,46 @@ def evaluate(gold_df, eval_df):
     gold_df = gold_df[gold_df['Status'] == 'Done']
     eval_df = eval_df[eval_df['Status'] == 'Done']
     
+    # Initialize counters
+    decision_correct = {assignee: 0 for assignee in gold_df['Assignee'].unique()}
+    mendel_id_correct = {assignee: 0 for assignee in gold_df['Assignee'].unique()}
+    missing_concept_correct = {assignee: 0 for assignee in gold_df['Assignee'].unique()}
+    parent_mendel_id_correct = {assignee: 0 for assignee in gold_df['Assignee'].unique()}
+    total_counts = {assignee: 0 for assignee in gold_df['Assignee'].unique()}
+    
     # Align rows based on 'Code'
+    for code in gold_df['Code']:
+        gold_row = gold_df[gold_df['Code'] == code]
+        eval_row = eval_df[eval_df['Code'] == code]
+        
+        if not gold_row.empty and not eval_row.empty:
+            eval_row = eval_row.iloc[0]
+            gold_row = gold_row.iloc[0]
+            assignee = gold_row['Assignee']
+            
+            total_counts[assignee] += 1
+            
+            if gold_row['Decision'] == eval_row['Decision']:
+                decision_correct[assignee] += 1
+                if gold_row['Mendel ID'] == eval_row['Mendel ID']:
+                    mendel_id_correct[assignee] += 1
+                    if gold_row['Missing Concept'] == eval_row['Missing Concept']:
+                        missing_concept_correct[assignee] += 1
+                        if gold_row['Parent Mendel ID If Missing Concept'] == eval_row['Parent Mendel ID If Missing Concept']:
+                            parent_mendel_id_correct[assignee] += 1
+    
+    # Calculate percentages
     results = []
     for assignee in gold_df['Assignee'].unique():
-        gold_rows = gold_df[gold_df['Assignee'] == assignee]
-        eval_rows = eval_df[eval_df['Assignee'] == assignee]
-        
-        decision_correct = 0
-        mendel_id_correct = 0
-        missing_concept_correct = 0
-        parent_mendel_id_correct = 0
-        
-        for code in gold_rows['Code']:
-            gold_row = gold_rows[gold_rows['Code'] == code]
-            eval_row = eval_rows[eval_rows['Code'] == code]
-            
-            if not eval_row.empty:
-                eval_row = eval_row.iloc[0]
-                gold_row = gold_row.iloc[0]
-                
-                if gold_row['Decision'] == eval_row['Decision']:
-                    decision_correct += 1
-                    if gold_row['Mendel ID'] == eval_row['Mendel ID']:
-                        mendel_id_correct += 1
-                        if gold_row['Missing Concept'] == eval_row['Missing Concept']:
-                            missing_concept_correct += 1
-                            if gold_row['Parent Mendel ID If Missing Concept'] == eval_row['Parent Mendel ID If Missing Concept']:
-                                parent_mendel_id_correct += 1
-        
-        total = len(gold_rows)
+        total = total_counts[assignee]
         if total > 0:
             results.append({
                 'Assignee': assignee,
-                'Decision': f"{(decision_correct / total) * 100:.2f}%",
-                'Mendel ID': f"{(mendel_id_correct / total) * 100:.2f}%",
-                'Missing Concept': f"{(missing_concept_correct / total) * 100:.2f}%",
-                'Parent Mendel ID If Missing Concept': f"{(parent_mendel_id_correct / total) * 100:.2f}%"
+                'Evaluated Rows': total,
+                'Decision': f"{(decision_correct[assignee] / total) * 100:.2f}%",
+                'Mendel ID': f"{(mendel_id_correct[assignee] / total) * 100:.2f}%",
+                'Missing Concept': f"{(missing_concept_correct[assignee] / total) * 100:.2f}%",
+                'Parent Mendel ID If Missing Concept': f"{(parent_mendel_id_correct[assignee] / total) * 100:.2f}%"
             })
     
     results_df = pd.DataFrame(results)
@@ -56,8 +60,8 @@ def main():
     st.title("Sheet Comparison App")
     
     st.sidebar.header("Upload Sheets")
-    gold_file = st.sidebar.file_uploader("Upload Gold Sheet", type=["xlsx"])
-    eval_file = st.sidebar.file_uploader("Upload Evaluation Sheet", type=["xlsx"])
+    gold_file = st.sidebar.file_uploader("Upload Gold Sheet (H2)", type=["xlsx"])
+    eval_file = st.sidebar.file_uploader("Upload Evaluation Sheet (H1)", type=["xlsx"])
     
     if gold_file and eval_file:
         gold_xls = load_data(gold_file)
