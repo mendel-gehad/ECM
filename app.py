@@ -21,21 +21,27 @@ def evaluate(gold_df, eval_df):
     for col in required_columns:
         if col not in gold_df.columns:
             st.error(f"Missing column in gold standard sheet: {col}")
-            return pd.DataFrame()
+            return pd.DataFrame(), pd.DataFrame()
         if col not in eval_df.columns:
             st.error(f"Missing column in evaluation sheet: {col}")
-            return pd.DataFrame()
+            return pd.DataFrame(), pd.DataFrame()
 
     # Filter rows where status is 'Done'
     gold_df = gold_df[gold_df['Status'] == 'Done']
     eval_df = eval_df[eval_df['Status'] == 'Done']
     
-    # Initialize counters
+    # Initialize counters and disagreement sheets
     decision_correct = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     mendel_id_correct = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     missing_concept_correct = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     parent_mendel_id_correct = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     total_counts = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
+    disagreement_sheets = {
+        'Decision': [],
+        'Mendel ID': [],
+        'Missing Concept': [],
+        'Parent Mendel ID If Missing Concept': []
+    }
     
     # Align rows based on 'Code'
     for code in gold_df['Code']:
@@ -51,12 +57,23 @@ def evaluate(gold_df, eval_df):
             
             if gold_row['Decision'] == eval_row['Decision']:
                 decision_correct[assignee] += 1
-                if gold_row['Mendel ID'] == eval_row['Mendel ID']:
-                    mendel_id_correct[assignee] += 1
-                    if gold_row['Missing Concept'] == eval_row['Missing Concept']:
-                        missing_concept_correct[assignee] += 1
-                        if gold_row['Parent Mendel ID If Missing Concept'] == eval_row['Parent Mendel ID If Missing Concept']:
-                            parent_mendel_id_correct[assignee] += 1
+            else:
+                disagreement_sheets['Decision'].append(eval_row.to_dict())
+                
+            if gold_row['Mendel ID'] == eval_row['Mendel ID']:
+                mendel_id_correct[assignee] += 1
+            else:
+                disagreement_sheets['Mendel ID'].append(eval_row.to_dict())
+                
+            if gold_row['Missing Concept'] == eval_row['Missing Concept']:
+                missing_concept_correct[assignee] += 1
+            else:
+                disagreement_sheets['Missing Concept'].append(eval_row.to_dict())
+                
+            if gold_row['Parent Mendel ID If Missing Concept'] == eval_row['Parent Mendel ID If Missing Concept']:
+                parent_mendel_id_correct[assignee] += 1
+            else:
+                disagreement_sheets['Parent Mendel ID If Missing Concept'].append(eval_row.to_dict())
     
     # Calculate percentages
     results = []
@@ -66,14 +83,18 @@ def evaluate(gold_df, eval_df):
             results.append({
                 'Assignee': assignee,
                 'Evaluated Rows': total,
-                'Decision': f"{(decision_correct[assignee] / total) * 100:.2f}%",
-                'Mendel ID': f"{(mendel_id_correct[assignee] / total) * 100:.2f}%",
-                'Missing Concept': f"{(missing_concept_correct[assignee] / total) * 100:.2f}%",
-                'Parent Mendel ID If Missing Concept': f"{(parent_mendel_id_correct[assignee] / total) * 100:.2f}%"
+                'Decision': (decision_correct[assignee] / total) * 100,
+                'Mendel ID': (mendel_id_correct[assignee] / total) * 100,
+                'Missing Concept': (missing_concept_correct[assignee] / total) * 100,
+                'Parent Mendel ID If Missing Concept': (parent_mendel_id_correct[assignee] / total) * 100
             })
     
     results_df = pd.DataFrame(results)
-    return results_df
+    disagreement_dfs = {key: pd.DataFrame(value) for key, value in disagreement_sheets.items()}
+    return results_df, disagreement_dfs
+
+def apply_conditional_formatting(df):
+    return df.style.background_gradient(cmap='coolwarm', subset=['Decision', 'Mendel ID', 'Missing Concept', 'Parent Mendel ID If Missing Concept'])
 
 def main():
     st.title("ECM Comparison")
@@ -98,13 +119,19 @@ def main():
                 eval_df = eval_xls.parse(tab_selection)
                 
                 if st.button("Start Evaluation"):
-                    results_df = evaluate(gold_df, eval_df)
+                    results_df, disagreement_dfs = evaluate(gold_df, eval_df)
                     if not results_df.empty:
                         st.write("Evaluation Results")
-                        st.dataframe(results_df)
+                        st.dataframe(apply_conditional_formatting(results_df))
                         
                         csv = results_df.to_csv(index=False)
                         st.download_button("Download CSV", csv, "evaluation_results.csv", "text/csv")
+                        
+                        # Download disagreement sheets
+                        for key, df in disagreement_dfs.items():
+                            if not df.empty:
+                                csv = df.to_csv(index=False)
+                                st.download_button(f"Download Disagreement CSV for {key}", csv, f"disagreement_{key.lower()}.csv", "text/csv")
     
 if __name__ == "__main__":
     main()
