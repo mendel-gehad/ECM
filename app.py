@@ -173,12 +173,6 @@ def main():
     
     st.sidebar.header("Upload Sheets")
     evaluation_type = st.sidebar.selectbox("Select Evaluation Type", ["General Comparison", "ECEq Sheets"])
-
-def main():
-    st.title("ECM Comparison")
-    
-    st.sidebar.header("Upload Sheets")
-    evaluation_type = st.sidebar.selectbox("Select Evaluation Type", ["General Comparison", "ECEq Sheets"])
     
     gold_file = st.sidebar.file_uploader("Upload Gold Sheet", type=["xlsx"])
     eval_file = st.sidebar.file_uploader("Upload Evaluated Sheet", type=["xlsx"])
