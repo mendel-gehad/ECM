@@ -12,6 +12,7 @@ def compare_values(gold_value, eval_value):
     if gold_value == "" and eval_value == "":
         return True
     return gold_value == eval_value
+
 def evaluate(gold_df, eval_df):
     # Ensure consistent column names
     gold_df.columns = gold_df.columns.str.strip()
@@ -46,6 +47,7 @@ def evaluate(gold_df, eval_df):
     missing_concept_total = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     parent_mendel_id_total = {assignee: 0 for assignee in eval_df['Assignee'].unique()}
     disagreements = []
+
     # Align rows based on 'Code'
     for code in gold_df['Code'].unique():
         gold_row = gold_df[gold_df['Code'] == code]
@@ -84,6 +86,7 @@ def evaluate(gold_df, eval_df):
                 parent_mendel_id_correct[assignee] += 1
                 
             disagreements.append(disagreement_entry)
+
     # Calculate percentages
     results = []
     for assignee in eval_df['Assignee'].unique():
@@ -103,10 +106,6 @@ def evaluate(gold_df, eval_df):
     results_df = pd.DataFrame(results)
     disagreements_df = pd.DataFrame(disagreements)
     return results_df, disagreements_df
-def load_data(uploaded_file):
-    if uploaded_file is not None:
-        return pd.ExcelFile(uploaded_file)
-    return None
 
 def compare_objects_dynamic(df1, df2):
     # Identify all properties in the Updated and Created Object columns
@@ -167,6 +166,7 @@ def compare_objects_dynamic(df1, df2):
         })
     
     return pd.DataFrame(metrics)
+
 
 def main():
     st.title("ECM Comparison")
