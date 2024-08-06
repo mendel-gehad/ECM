@@ -103,17 +103,20 @@ def evaluate(gold_df, eval_df):
     results_df = pd.DataFrame(results)
     disagreements_df = pd.DataFrame(disagreements)
     return results_df, disagreements_df
+def load_data(uploaded_file):
+    if uploaded_file is not None:
+        return pd.ExcelFile(uploaded_file)
+    return None
+
 def compare_objects_dynamic(df1, df2):
     # Identify all properties in the Updated and Created Object columns
-    updated_properties = [col for col in df1.columns if col.startswith('Updated Object')]
-    created_properties = [col for col in df1.columns if col.startswith('Created Object')]
-    all_properties = updated_properties + created_properties
+    properties = [col for col in df1.columns if "::" in col]
     
     # Initialize metrics
     metrics = []
     
     # Iterate through each property
-    for entity in all_properties:
+    for entity in properties:
         TP = TN = FP = FN = 0
         gold_support = df1[entity].notna().sum() if entity in df1.columns else 0
         pred_support = df2[entity].notna().sum() if entity in df2.columns else 0
@@ -124,8 +127,16 @@ def compare_objects_dynamic(df1, df2):
             row2 = df2[df2['Source Code: Value'] == value]
             
             if not row1.empty and not row2.empty:
-                # Compare properties
-                if all(row1[entity].values == row2[entity].values):
+                value1 = row1[entity].values[0]
+                value2 = row2[entity].values[0]
+                
+                if pd.isna(value1) or pd.isna(value2):
+                    continue
+                
+                id1 = value1.split("::")[0] if "::" in value1 else value1
+                id2 = value2.split("::")[0] if "::" in value2 else value2
+                
+                if id1 == id2:
                     TP += 1
                 else:
                     FN += 1
@@ -148,14 +159,15 @@ def compare_objects_dynamic(df1, df2):
             'TN': TN,
             'FP': FP,
             'FN': FN,
-            'Precision': precision,
-            'Recall': recall,
-            'F1': f1_score,
+            'Precision': f"{precision:.2f}%",
+            'Recall': f"{recall:.2f}%",
+            'F1': f"{f1_score:.2f}%",
             'Gold Support': gold_support,
             'Pred Support': pred_support
         })
     
     return pd.DataFrame(metrics)
+
 def main():
     st.title("ECM Comparison")
     
