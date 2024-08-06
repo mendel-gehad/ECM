@@ -162,6 +162,27 @@ def main():
     st.sidebar.header("Upload Sheets")
     evaluation_type = st.sidebar.selectbox("Select Evaluation Type", ["General Comparison", "ECEq Sheets"])
 
+def main():
+    st.title("ECM Comparison")
+    
+    st.sidebar.header("Upload Sheets")
+    evaluation_type = st.sidebar.selectbox("Select Evaluation Type", ["General Comparison", "ECEq Sheets"])
+    
+    gold_file = st.sidebar.file_uploader("Upload Gold Sheet", type=["xlsx"])
+    eval_file = st.sidebar.file_uploader("Upload Evaluated Sheet", type=["xlsx"])
+    
+    if gold_file and eval_file:
+        gold_xls = load_data(gold_file)
+        eval_xls = load_data(eval_file)
+        
+        if gold_xls is not None and eval_xls is not None:
+            gold_sheets = gold_xls.sheet_names
+            eval_sheets = eval_xls.sheet_names
+            
+            tab_selection = st.selectbox("Select Tab to Evaluate", gold_sheets)
+            
+            if tab_selection:
+                st.write(f"Evaluating Tab: {tab_selection}")
                 gold_df = gold_xls.parse(tab_selection, skiprows=1 if evaluation_type == "ECEq Sheets" else 0)
                 eval_df = eval_xls.parse(tab_selection, skiprows=1 if evaluation_type == "ECEq Sheets" else 0)
                 
